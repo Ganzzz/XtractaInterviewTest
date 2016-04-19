@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Scanner;
 
 import search.HashSearch;
 import search.IHashSearch;
@@ -20,29 +22,29 @@ public class Runner {
 
 	ILoad dataLoader = new InvoiceFileLoader();
 	IHashSearch searcher = new HashSearch();
+	static Map<String, Document> documentMap = new HashMap<String, Document>();
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// TODO: send file or directory as arguments.
 		// TODO: println to show the process
 		Runner runner = new Runner();
-		// String supplierFilePath =
-		// "/Users/ganesh/git/Xtracta_Interview/src/test/resources/suppliernames.txt";
-		// String invoiceFilePath =
-		// "/Users/ganesh/git/Xtracta_Interview/src/test/resources/invoice.txt";
 		String supplierFilePath = args[0];
 		String invoiceFilePath = args[1];
 
-		String supplierName = runner.findSupplier(invoiceFilePath,
-				supplierFilePath);
-		System.out.println("The Supplier Name is :" + supplierName);
+		runner.buildNecessaryIndices(invoiceFilePath, supplierFilePath);
+		System.out
+				.println("Enter invoice file name with extension to find its supplier information");
+		String invoiceFileName = "invoice.txt";
+		Document doc = documentMap.get(invoiceFileName);
 
+		String supplierName = runner.findSupplier(doc);
+		System.out.println("The Supplier Name is :" + supplierName);
 	}
 
-	//for interview sake, building index happens as a part of search (as it runs in memory) as the first step.
-	public String findSupplier(String invoiceFilePath, String supplierFilePath) {
-
-		Document invoiceDoc = buildNecessaryIndices(invoiceFilePath,
-				supplierFilePath);
+	// for interview sake, building index happens as a part of search (as it
+	// runs in memory) as the first step.
+	public String findSupplier(Document invoiceDoc) {
 
 		String supplierName = "";
 
@@ -80,18 +82,18 @@ public class Runner {
 
 	}
 
-	private Document buildNecessaryIndices(String invoiceFilePath,
+	private void buildNecessaryIndices(String invoiceFilePath,
 			String supplierFilePath) {
 		System.out.println("Started building supplier data index");
 		this.addToIndex(supplierFilePath);
 		System.out.println("Finished building supplier data index");
 
 		System.out.println("Started building invoice data index");
-		Document invoiceDoc = dataLoader
-				.loadToIndexAndReturnDocument(invoiceFilePath);
+
+		documentMap = dataLoader
+				.loadToIndexAndReturnDocumentMap(invoiceFilePath);
 
 		System.out.println("finished building invoice data index");
-		return invoiceDoc;
 	}
 
 	private String getSupplierName(Document invoiceDoc, Word matchinWord) {

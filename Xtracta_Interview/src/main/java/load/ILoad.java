@@ -3,6 +3,8 @@
  */
 package load;
 
+import java.util.Map;
+
 import model.Document;
 
 /**
@@ -35,5 +37,8 @@ public interface ILoad {
 	 * @return
 	 */
 	public Document loadToIndexAndReturnDocument(String filePath);
+	
+	public Map<String, Document> loadToIndexAndReturnDocumentMap(String filePath);
+
 
 }

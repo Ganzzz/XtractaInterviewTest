@@ -6,12 +6,32 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import model.Document;
 import model.Word;
 
 public class InvoiceFileLoader implements ILoad {
+
+	@Override
+	public Map<String, Document> loadToIndexAndReturnDocumentMap(String filePath) {
+		File file = new File(filePath);
+		Map<String, Document> documentMap = new HashMap<String, Document>();
+		if (file.isDirectory()) {
+			for (File f : file.listFiles()) {
+				Document doc = new Document();
+				doc = buildIndex(filePath, doc);
+				documentMap.put(doc.getDocumentName(), doc);
+			}
+
+		} else {
+			Document doc = loadToIndexAndReturnDocument(filePath);
+			documentMap.put(doc.getDocumentName(), doc);
+		}
+		return documentMap;
+	}
 
 	@Override
 	public Document loadToIndexAndReturnDocument(String filePath) {
