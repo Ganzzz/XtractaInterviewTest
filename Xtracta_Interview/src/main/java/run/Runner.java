@@ -25,8 +25,12 @@ public class Runner {
 		// TODO: send file or directory as arguments.
 		// TODO: println to show the process
 		Runner runner = new Runner();
-		String supplierFilePath = "/Users/ganesh/git/Xtracta_Interview/src/test/resources/suppliernames.txt";
-		String invoiceFilePath = "/Users/ganesh/git/Xtracta_Interview/src/test/resources/invoice.txt";
+		// String supplierFilePath =
+		// "/Users/ganesh/git/Xtracta_Interview/src/test/resources/suppliernames.txt";
+		// String invoiceFilePath =
+		// "/Users/ganesh/git/Xtracta_Interview/src/test/resources/invoice.txt";
+		String supplierFilePath = args[0];
+		String invoiceFilePath = args[1];
 
 		String supplierName = runner.findSupplier(invoiceFilePath,
 				supplierFilePath);
@@ -34,17 +38,11 @@ public class Runner {
 
 	}
 
+	//for interview sake, building index happens as a part of search (as it runs in memory) as the first step.
 	public String findSupplier(String invoiceFilePath, String supplierFilePath) {
 
-		System.out.println("Started building supplier data index");
-		this.addToIndex(supplierFilePath);
-		System.out.println("Finished building supplier data index");
-
-		System.out.println("Started building invoice data index");
-		Document invoiceDoc = dataLoader
-				.loadToIndexAndReturnDocument(invoiceFilePath);
-
-		System.out.println("finished building invoice data index");
+		Document invoiceDoc = buildNecessaryIndices(invoiceFilePath,
+				supplierFilePath);
 
 		String supplierName = "";
 
@@ -77,9 +75,23 @@ public class Runner {
 		 * 
 		 * if(searcher.exists(word)){ return word; } }
 		 */
-		
+
 		return supplierName;
 
+	}
+
+	private Document buildNecessaryIndices(String invoiceFilePath,
+			String supplierFilePath) {
+		System.out.println("Started building supplier data index");
+		this.addToIndex(supplierFilePath);
+		System.out.println("Finished building supplier data index");
+
+		System.out.println("Started building invoice data index");
+		Document invoiceDoc = dataLoader
+				.loadToIndexAndReturnDocument(invoiceFilePath);
+
+		System.out.println("finished building invoice data index");
+		return invoiceDoc;
 	}
 
 	private String getSupplierName(Document invoiceDoc, Word matchinWord) {
@@ -110,15 +122,26 @@ public class Runner {
 	private void addToIndex(String filePath) {
 		try {
 			File file = new File(filePath);
-			List<String> lines = Files.readAllLines(Paths.get(file
-					.getAbsolutePath()));
-			for (String line : lines) {
-				searcher.buildIndex(line);
+			if (file.isDirectory()) {
+				for (File f : file.listFiles()) {
+					addFilesToIndex(f);
+				}
+			} else {
+				addFilesToIndex(file);
 			}
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+
+	}
+
+	private void addFilesToIndex(File file) throws IOException {
+		List<String> lines = Files.readAllLines(Paths.get(file
+				.getAbsolutePath()));
+		for (String line : lines) {
+			searcher.buildIndex(line);
 		}
 
 	}
