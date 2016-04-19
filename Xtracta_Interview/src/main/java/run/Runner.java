@@ -33,13 +33,19 @@ public class Runner {
 		String invoiceFilePath = args[1];
 
 		runner.buildNecessaryIndices(invoiceFilePath, supplierFilePath);
-		System.out
-				.println("Enter invoice file name with extension to find its supplier information");
-		String invoiceFileName = "invoice.txt";
-		Document doc = documentMap.get(invoiceFileName);
 
-		String supplierName = runner.findSupplier(doc);
-		System.out.println("The Supplier Name is :" + supplierName);
+		// create a scanner so we can read the command-line input
+		Scanner scanner = new Scanner(System.in);
+
+		do {
+			System.out
+					.println("Enter invoice file name with extension to find its supplier information");
+			String invoiceFileName = scanner.next();
+			Document doc = documentMap.get(invoiceFileName);
+
+			String supplierName = runner.findSupplier(doc);
+			System.out.println("The Supplier Name is :" + supplierName);
+		} while (true);
 	}
 
 	// for interview sake, building index happens as a part of search (as it
