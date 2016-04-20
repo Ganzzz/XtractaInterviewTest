@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 
-import search.HashSearch;
-import search.IHashSearch;
 import load.ILoadMapIndex;
 import load.InvoiceFileIndexer;
 import load.SupplierFileIndexer;
