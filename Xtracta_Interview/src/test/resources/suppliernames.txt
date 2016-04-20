@@ -44,8 +44,10 @@ Id,SupplierName
 22523305,Broadspectrum (New Zealand) Limited
 22523304,007659
 22523303,Moths & Butterflies of NZ Trust
-3153303,Demo Company
+3153303333,Demo Ganesh
 31533033,Demo
+3153303,Demo Company
+3153303234234,Demo Compa
 22523302,Opotiki News
 22523301,212156
 22523300,VINCO PRODUCTS

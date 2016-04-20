@@ -11,7 +11,7 @@ public class HashSearch implements IHashSearch {
 	public void buildIndex(String keyVal) {
 		int seperatorIndex = keyVal.indexOf(",");
 		String key = keyVal.substring(0, seperatorIndex);
-		String value = keyVal.substring(seperatorIndex + 1);
+		String value = keyVal.substring(seperatorIndex + 1); 
 		if (!searchIndex.containsKey(key)) {
 			searchIndex.put(key, value);
 		}

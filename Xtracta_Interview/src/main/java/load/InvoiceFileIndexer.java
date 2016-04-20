@@ -13,43 +13,25 @@ import java.util.Map;
 import model.Document;
 import model.Word;
 
-public class InvoiceFileLoader implements ILoad {
+public class InvoiceFileIndexer implements ILoadMapIndex<String, Document> {
 
 	@Override
-	public Map<String, Document> loadToIndexAndReturnDocumentMap(String filePath) {
+	public Map<String, Document> loadToIndexAndReturnIndex(String filePath) {
 		File file = new File(filePath);
 		Map<String, Document> documentMap = new HashMap<String, Document>();
 		if (file.isDirectory()) {
 			for (File f : file.listFiles()) {
 				Document doc = new Document();
-				doc = buildIndex(filePath, doc);
-				documentMap.put(doc.getDocumentName(), doc);
+				doc = buildIndex(f.getAbsolutePath(), doc);
+				documentMap.put(doc.getDocumentName().toLowerCase(), doc);
 			}
 
 		} else {
-			Document doc = loadToIndexAndReturnDocument(filePath);
+			Document doc = new Document();
+			doc = buildIndex(filePath, doc);
 			documentMap.put(doc.getDocumentName(), doc);
 		}
 		return documentMap;
-	}
-
-	@Override
-	public Document loadToIndexAndReturnDocument(String filePath) {
-		// New index document
-		Document doc = new Document();
-		try {
-
-			doc = buildIndex(filePath, doc);
-
-			// store to a storage layer here. Not implemented as for this
-			// interview, documents are returned and held in-memory.
-
-		} catch (Exception ex) {
-			// NOTE: for interview sake, logger are not implemented.
-			System.err.println(ex.getMessage());
-			return null;
-		}
-		return doc;
 	}
 
 	@Override
@@ -165,7 +147,7 @@ public class InvoiceFileLoader implements ILoad {
 	}
 
 	public static void main(String[] args) {
-		ILoad dataLoader = new InvoiceFileLoader();
+		ILoadMapIndex dataLoader = new InvoiceFileIndexer();
 		dataLoader
 				.loadToIndex("/Users/ganesh/git/Xtracta_Interview/src/test/resources/invoice.txt");
 

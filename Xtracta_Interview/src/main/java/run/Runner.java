@@ -13,16 +13,20 @@ import java.util.Scanner;
 
 import search.HashSearch;
 import search.IHashSearch;
-import load.ILoad;
-import load.InvoiceFileLoader;
+import load.ILoadMapIndex;
+import load.InvoiceFileIndexer;
+import load.SupplierFileIndexer;
 import model.Document;
+import model.Supplier;
 import model.Word;
 
 public class Runner {
 
-	ILoad dataLoader = new InvoiceFileLoader();
-	IHashSearch searcher = new HashSearch();
-	static Map<String, Document> documentMap = new HashMap<String, Document>();
+	ILoadMapIndex<String, Document> dataLoader = new InvoiceFileIndexer();
+	ILoadMapIndex<String, List<Supplier>> supplierDataIndexer = new SupplierFileIndexer();
+
+	Map<String, Document> invoiceDocumentMap = new HashMap<String, Document>();
+	Map<String, List<Supplier>> supplierMap = new HashMap<String, List<Supplier>>();
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
@@ -41,18 +45,29 @@ public class Runner {
 			System.out
 					.println("Enter invoice file name with extension to find its supplier information");
 			String invoiceFileName = scanner.next();
-			Document doc = documentMap.get(invoiceFileName);
+			Document doc = runner.invoiceDocumentMap.get(invoiceFileName
+					.toLowerCase());
+			if (doc == null) {
+				System.out.println("File not found in Index");
+				continue;
+			}
 
-			String supplierName = runner.findSupplier(doc);
-			System.out.println("The Supplier Name is :" + supplierName);
+			Supplier supplier = runner.findSupplier(doc);
+			if (supplier == null) {
+				System.out.println("Unable to find supplier Information");
+			}
+			System.out.println("The Supplier Name is :"
+					+ supplier.getSupplierName());
+			System.out.println("The Supplier Id is :"
+					+ supplier.getSupplierId());
 		} while (true);
 	}
 
 	// for interview sake, building index happens as a part of search (as it
 	// runs in memory) as the first step.
-	public String findSupplier(Document invoiceDoc) {
+	public Supplier findSupplier(Document invoiceDoc) {
 
-		String supplierName = "";
+		Supplier supplier = null;
 
 		// pragmatically, number of supplier could be lesser than the invoices.
 		Iterator<Entry<Integer, List<Word>>> it = invoiceDoc
@@ -63,95 +78,77 @@ public class Runner {
 			@SuppressWarnings("unchecked")
 			List<Word> words = (List<Word>) pair.getValue();
 			for (Word word : words) {
-				if (searcher.exists(word.getValue())) {
-					supplierName = getSupplierName(invoiceDoc, word);
-					System.out.println("The Supplier Id is :"
-							+ searcher.getId(supplierName));
-					return supplierName;
+				if (supplierMap.containsKey(word.getValue())) {
+					supplier = getSupplierName(invoiceDoc, word);
+					return supplier;
 				}
 			}
 		}
 
-		/*
-		 * for(String line: invoiceFileLines){ int beginingIndex =
-		 * line.indexOf("word': '");
-		 * 
-		 * String word = line.substring(beginingIndex+8, line.indexOf(",",
-		 * beginingIndex)); //corner case as apostrophes are possible in
-		 * supplier names as well, the last apostrophe is removed with index
-		 * position word= word.substring(0, word.length()-1);
-		 * 
-		 * if(searcher.exists(word)){ return word; } }
-		 */
-
-		return supplierName;
+		return supplier;
 
 	}
 
 	private void buildNecessaryIndices(String invoiceFilePath,
 			String supplierFilePath) {
 		System.out.println("Started building supplier data index");
-		this.addToIndex(supplierFilePath);
+		supplierMap = this.supplierDataIndexer
+				.loadToIndexAndReturnIndex(supplierFilePath);
 		System.out.println("Finished building supplier data index");
 
 		System.out.println("Started building invoice data index");
 
-		documentMap = dataLoader
-				.loadToIndexAndReturnDocumentMap(invoiceFilePath);
+		invoiceDocumentMap = dataLoader
+				.loadToIndexAndReturnIndex(invoiceFilePath);
 
 		System.out.println("finished building invoice data index");
 	}
 
-	private String getSupplierName(Document invoiceDoc, Word matchinWord) {
+	private Supplier getSupplierName(Document invoiceDoc, Word matchingWord) {
 
-		String supplierName = "";
-		String tempWord = "";
-		int lineId = matchinWord.getLineId();
-		List<Word> wordList = invoiceDoc.getWordListByLine().get(lineId);
-		for (Word word : wordList) {
-			tempWord = word.getValue();
-			if (!supplierName.isEmpty()) {
-				tempWord = supplierName + tempWord;
-			}
+		List<Supplier> matchingNameSupplierList = supplierMap.get(matchingWord
+				.getValue());
+		List<Word> matchingLine = invoiceDoc.getWordListByLine().get(
+				matchingWord.getLineId());
 
-			if (searcher.exists(tempWord)) {
-				supplierName = supplierName + word.getValue() + " ";
-			} else {
-				if (!supplierName.isEmpty()) {
-					return supplierName.trim();
+		// one supplier name could be a partial match to another supplier name.
+		// to pick the most matching supplier name, we iterate on the inverted
+		// index
+		Supplier bestMatchingSupplier = null;
+
+		String matchString = "";
+		// if inverted index has only one supplier with this partial matching,
+		// return immediately
+		if (matchingNameSupplierList.size() == 1)
+			return matchingNameSupplierList.get(0);
+
+		for (Supplier supplier : matchingNameSupplierList) {
+			matchString = "";
+			for (Word w : matchingLine) {
+
+				if (!matchString.isEmpty()) {
+
+					if (supplier.getSupplierName().equalsIgnoreCase(
+							matchString + " " + w.getValue())) {
+						if (bestMatchingSupplier == null
+								|| bestMatchingSupplier.getSupplierName()
+										.length() < supplier.getSupplierName()
+										.length())
+							bestMatchingSupplier = supplier;
+						// find next best matching supplier
+						break;
+					} else {
+						matchString = matchString + " " + w.getValue();
+					}
+
+				} else {
+					if (supplier.getSupplierName().contains(w.getValue())) {
+						matchString = w.getValue();
+					}
 				}
-
 			}
 		}
-
-		return supplierName.trim();
-	}
-
-	private void addToIndex(String filePath) {
-		try {
-			File file = new File(filePath);
-			if (file.isDirectory()) {
-				for (File f : file.listFiles()) {
-					addFilesToIndex(f);
-				}
-			} else {
-				addFilesToIndex(file);
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	private void addFilesToIndex(File file) throws IOException {
-		List<String> lines = Files.readAllLines(Paths.get(file
-				.getAbsolutePath()));
-		for (String line : lines) {
-			searcher.buildIndex(line);
-		}
-
+		return bestMatchingSupplier;
 	}
 
 }

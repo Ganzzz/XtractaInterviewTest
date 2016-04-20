@@ -16,7 +16,7 @@ import model.Document;
  * 
  * @author ganesh
  */
-public interface ILoad {
+public interface ILoadMapIndex<K,V> {
 
 	// NOTE: Assumption: for the interview sake, the structure & complexity of
 	// different invoice files are treated to be the same.
@@ -30,15 +30,14 @@ public interface ILoad {
 	public boolean loadToIndex(String filePath);
 	
 	/**
-	 * returns a Document with an optmised index. For the sake of interview the document is not stored, but rather its in memory, this is
+	 * returns a Map index. For the sake of interview the index is not stored in disk, but rather its in memory, this is
 	 * a helper method.
 	 * 
 	 * @param filePath
 	 * @return
 	 */
-	public Document loadToIndexAndReturnDocument(String filePath);
 	
-	public Map<String, Document> loadToIndexAndReturnDocumentMap(String filePath);
+	public Map<K, V> loadToIndexAndReturnIndex(String filePath);
 
 
 }
