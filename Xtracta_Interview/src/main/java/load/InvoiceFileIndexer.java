@@ -21,6 +21,11 @@ public class InvoiceFileIndexer implements ILoadMapIndex<String, Document> {
 		Map<String, Document> documentMap = new HashMap<String, Document>();
 		if (file.isDirectory()) {
 			for (File f : file.listFiles()) {
+				
+				if(!f.getAbsolutePath().contains("txt")){
+					continue;
+				}
+				
 				Document doc = new Document();
 				doc = buildIndex(f.getAbsolutePath(), doc);
 				documentMap.put(doc.getDocumentName().toLowerCase(), doc);

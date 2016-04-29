@@ -40,6 +40,9 @@ public class SupplierFileIndexer implements
 
 			if (file.isDirectory()) {
 				for (File f : file.listFiles()) {
+					if(!f.getAbsolutePath().contains("txt")){
+						continue;
+					}
 					supplierMap = buildIndex(f.getAbsolutePath(), supplierMap);
 				}
 
