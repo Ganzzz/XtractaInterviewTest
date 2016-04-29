@@ -19,7 +19,7 @@ public class Runner {
 	ILoadMapIndex<String, Document> dataLoader = new InvoiceFileIndexer();
 	ILoadMapIndex<String, List<Supplier>> supplierDataIndexer = new SupplierFileIndexer();
 
-	Map<String, Document> invoiceDocumentMap = new HashMap<String, Document>();
+	public Map<String, Document> invoiceDocumentMap = new HashMap<String, Document>();
 	Map<String, List<Supplier>> supplierMap = new HashMap<String, List<Supplier>>();
 
 	@SuppressWarnings("resource")
@@ -83,7 +83,7 @@ public class Runner {
 
 	}
 
-	private void buildNecessaryIndices(String invoiceFilePath,
+	public void buildNecessaryIndices(String invoiceFilePath,
 			String supplierFilePath) {
 		System.out.println("Started building supplier data index");
 		supplierMap = this.supplierDataIndexer
